@@ -1,5 +1,5 @@
 name: 'Glupe Semantic Audit'
-description: 'Mathematically audits an AI-generated implementation against a master .glp specification.'
+description: 'Mathematically audits an AI-generated implementation (single file or entire repository) against a master .glp specification.'
 branding:
   icon: 'check-circle'
   color: 'blue'
@@ -8,8 +8,8 @@ inputs:
   spec_file:
     description: 'Path to the expected .glp specification blueprint'
     required: true
-  impl_file:
-    description: 'Path to the generated source code (e.g., src/main.cpp)'
+  impl_path:
+    description: 'Path to the generated source code file or project directory (e.g., ./src)'
     required: true
   api_key:
     description: 'OpenAI / Google API Key for the Semantic Engine'
@@ -26,23 +26,12 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Cache Glupe Compiler
-      id: cache-glupe
-      uses: actions/cache@v4
-      with:
-        path: ~/.glupe
-        key: glupe-binary-${{ runner.os }}-v6
-
     - name: Install Glupe
-      if: steps.cache-glupe.outputs.cache-hit != 'true'
       shell: bash
       run: |
         echo "Installing Glupe Semantic Compiler..."
         curl -fsSL https://raw.githubusercontent.com/alonsovm44/glupe/master/install.sh | bash
-
-    - name: Add Glupe to PATH
-      shell: bash
-      run: echo "$HOME/.glupe" >> $GITHUB_PATH
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     - name: Configure AI Backend
       shell: bash
@@ -52,7 +41,7 @@ runs:
 
     - name: Refine Implementation
       shell: bash
-      run: glupe "${{ inputs.impl_file }}" -refine -cloud -o _temp_pr_architecture.glp
+      run: glupe "${{ inputs.impl_path }}" -refine -cloud -o _temp_pr_architecture.glp
 
     - name: Execute Audit
       shell: bash
