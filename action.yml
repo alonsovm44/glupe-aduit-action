@@ -1,5 +1,5 @@
 name: 'Glupe Semantic Audit'
-description: ''
+description: 'Mathematically audits an AI-generated implementation against a master .glp specification.'
 branding:
   icon: 'check-circle'
   color: 'blue'
@@ -26,12 +26,23 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Cache Glupe Compiler
+      id: cache-glupe
+      uses: actions/cache@v4
+      with:
+        path: ~/.glupe
+        key: glupe-binary-${{ runner.os }}-v6
+
     - name: Install Glupe
+      if: steps.cache-glupe.outputs.cache-hit != 'true'
       shell: bash
       run: |
         echo "Installing Glupe Semantic Compiler..."
         curl -fsSL https://raw.githubusercontent.com/alonsovm44/glupe/master/install.sh | bash
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Add Glupe to PATH
+      shell: bash
+      run: echo "$HOME/.glupe" >> $GITHUB_PATH
 
     - name: Configure AI Backend
       shell: bash
